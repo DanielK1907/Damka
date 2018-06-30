@@ -99,7 +99,6 @@ public class Damka extends JFrame {
      */
     public Damka(int length, int pawnRows) {
         super("Russian Checkers (Shashki)");
-        
         LENGTH = length;
         PAWN_ROWS = pawnRows;
         TILE_SIZE = 600/LENGTH;
@@ -165,7 +164,7 @@ public class Damka extends JFrame {
                 tiles[i][j].setColor(DamkaTile.TilePawn.WHITE.ordinal());
             }
         }
-
+        
         // set the white pawns
         for (int i = LENGTH - PAWN_ROWS; i < LENGTH; i++) {
             for (int j = 1 - i % 2; j < LENGTH; j += 2) {

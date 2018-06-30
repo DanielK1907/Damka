@@ -3,7 +3,6 @@ package myproject;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static myproject.Damka.MAX_PAWNS_IN_STALEMATE;
@@ -48,7 +47,7 @@ public class Computer {
         } 
     }
     
-    private static final int DEPTH_MAX = 8;
+    public static int DEPTH_MAX;
     public static final float MIN_POS_VAL = -10000;
     public static final float MAX_POS_VAL =  10000;
     
@@ -56,7 +55,7 @@ public class Computer {
     public static Computer comp = new Computer();
 
     public Damka board;
-    public Move moveToPlay;
+    public Move moveToPlay; // The move which will be played
     private static Random rand = new Random();
     
     Stack<Move> movesStack = new Stack<>();
@@ -211,7 +210,6 @@ public class Computer {
         
         if (Max)
         {
-      
             positionValue = MIN_POS_VAL;
             sign = 1;
         }
@@ -253,7 +251,7 @@ public class Computer {
             }*/
             // Alpha-Beta Purning!!!
             if (alpha >= beta)
-                break;
+               break;
         }
         
         return positionValue;
@@ -539,10 +537,11 @@ public class Computer {
     {
         moveToPlay = null;
         board.isComputerPlaying = true;
-        //int movesWithoutProgress = board.movesWithoutProgress;
+        //long start = System.nanoTime();
         findBestMove();
+        //long result = System.nanoTime() - start;
+        //board.setTitle(Long.toString(result));
         board.isComputerPlaying = false;
-        //board.movesWithoutProgress = movesWithoutProgress;
         if (moveToPlay != null)
             makeMove(moveToPlay);
         else

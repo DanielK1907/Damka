@@ -1,13 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package myproject;
 
 /**
  *
- * @author Daniel Kanevsky
+ * @author Daniel Kanevsky 
  */
 import javax.swing.*;
 import java.awt.event.*;
@@ -120,7 +116,7 @@ public class DamkaTile extends JButton implements ActionListener{
             board.turnPawnOn(this);
             return;
         }
-        
+         
         if (color == TilePawn.WHITE_PAWN_CHOSEN.ordinal() ||
             color == TilePawn.BLACK_PAWN_CHOSEN.ordinal())
         {

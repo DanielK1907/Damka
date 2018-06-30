@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package myproject;
 
 import java.awt.Color;
@@ -18,19 +13,36 @@ import static javax.swing.JFrame.EXIT_ON_CLOSE;
  */
 public class MyProject {
 
-    /**
-     * @param args the command line arguments
-     */
+    private static final Color MAGIC = new Color(50, 155, 105);
+    private static final int EASY = 4;
+    private static final int MEDIUM = 6;
+    private static final int HARD = 8;
+    
     public static void main(String[] args) {
         
         //<editor-fold defaultstate="collapsed" desc="Settings JFrame">
         
-        // Instantiate the comboboxes
+        
+        // Instantiate the comboboxes and radio buttons
         JFrame f = new JFrame("Settings");
         JComboBox lengthBox = new JComboBox();
         JComboBox pawnRowsBox = new JComboBox();
+        ButtonGroup difficulties = new ButtonGroup();
+        JRadioButton easy = new JRadioButton("Easy");
+        JRadioButton medium = new JRadioButton("Medium");
+        JRadioButton hard = new JRadioButton("Hard", true);
         lengthBox.setBounds(80, 90, 60, 50);
-        pawnRowsBox.setBounds(255, 90, 60, 50);      
+        pawnRowsBox.setBounds(255, 90, 60, 50);
+        easy.setBounds(120, 140, 140, 80);
+        easy.setBackground(Color.yellow);
+        medium.setBounds(120, 200, 140, 80);
+        hard.setBounds(120, 260, 140, 80);
+        easy.setBackground(MAGIC);
+        medium.setBackground(MAGIC);
+        hard.setBackground(MAGIC);
+        difficulties.add(easy);
+        difficulties.add(medium);
+        difficulties.add(hard);
         
         // Instantiate the labels
         JLabel lengthLabel = new JLabel("Board Length :");
@@ -46,10 +58,17 @@ public class MyProject {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 Damka d;
-                if (lengthBox.getSelectedItem() != null & pawnRowsBox.getSelectedItem() != null)
+                if (lengthBox.getSelectedItem() != null && pawnRowsBox.getSelectedItem() != null)
                     d = new Damka((int)lengthBox.getSelectedItem(), (int)pawnRowsBox.getSelectedItem());
                 else // Go for the classic variation
                     d = new Damka(8, 3);
+                if (easy.isSelected())
+                    Computer.DEPTH_MAX = EASY;
+                else if (medium.isSelected())
+                    Computer.DEPTH_MAX = MEDIUM;
+                else
+                    Computer.DEPTH_MAX = HARD;
+                
                 Computer.comp.board = d;
                 d.isComputer = false;
                 d.start();
@@ -69,6 +88,13 @@ public class MyProject {
                     d = new Damka((int)lengthBox.getSelectedItem(), (int)pawnRowsBox.getSelectedItem());
                 else // Go for the classic variation
                     d = new Damka(8, 3);
+                if (easy.isSelected())
+                    Computer.DEPTH_MAX = EASY;
+                else if (medium.isSelected())
+                    Computer.DEPTH_MAX = MEDIUM;
+                else
+                    Computer.DEPTH_MAX = HARD;
+                
                 Computer.comp.board = d;
                 d.isComputer = true;
                 d.start();
@@ -79,6 +105,8 @@ public class MyProject {
         
         for (int i = 4; i <= 12; i++)
             lengthBox.addItem(i);
+        lengthBox.setSelectedItem(null);
+        
         
         lengthBox.addActionListener(new ActionListener() {
             @Override
@@ -86,12 +114,16 @@ public class MyProject {
                 pawnRowsBox.removeAllItems();
                 for (int i = 1; i < ((int)lengthBox.getSelectedItem()+1)/2; i++)
                     pawnRowsBox.addItem(i);
+                pawnRowsBox.setSelectedItem(null);
             }
         });
         
         
         f.add(lengthBox);
         f.add(pawnRowsBox);
+        f.add(easy);
+        f.add(medium);
+        f.add(hard);
         f.add(lengthLabel);
         f.add(pawnRowsLabel);
         f.setSize(400, 360);
@@ -102,9 +134,8 @@ public class MyProject {
         f.setResizable(false);
         f.setLocationRelativeTo(null); // Passing null centers the form!
         f.setVisible(true);
-        f.getContentPane().setBackground(new Color(50, 155, 105));
+        f.getContentPane().setBackground(MAGIC);
 //</editor-fold>
-
-        
+         
     }
 }
