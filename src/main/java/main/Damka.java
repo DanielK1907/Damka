@@ -1,4 +1,4 @@
-package myproject;
+package main;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -17,26 +17,26 @@ public class Damka extends JFrame {
     
     //<editor-fold defaultstate="collapsed" desc="Constants">
     // Height and width of the board
-    public final int LENGTH;
-    // Number of rows filles with pawns for each side
-    public final int PAWN_ROWS;
+    final int LENGTH;
+    // Number of rows filled with pawns for each side
+    final int PAWN_ROWS;
     
     // Tile length in pixels
-    public static int TILE_SIZE;
+    static int TILE_SIZE;
     
-    // The color purple - used in evaluation
-    public static final Color PURPLE = new Color(250, 0, 250);
+    // The color purple - used in evaluation to express black is winning
+    private static final Color PURPLE = new Color(250, 0, 250);
     
     // Number of moves without captures or pawn pushes needed for a draw
-    public static final int MOVES_FOR_DRAW = 15;
+    static final int MOVES_FOR_DRAW = 15;
     
     // Maximum amount of same-color pawns in a position where player can't move
-    public static final int MAX_PAWNS_IN_STALEMATE = 5;
+    static final int MAX_PAWNS_IN_STALEMATE = 5;
 
     /**
-     * Direction vector for possile direction the queen can move
+     * Direction vector for possible direction the queen can move
      */
-    public static final int[][] QUEEN_DIRS = {
+    private static final int[][] QUEEN_DIRS = {
         {1, 1},
         {1, -1},
         {-1, 1},
@@ -56,7 +56,7 @@ public class Damka extends JFrame {
     
     //<editor-fold defaultstate="collapsed" desc="Variables">
     // All the game board tiles
-    public DamkaTile[][] tiles;
+    public DamkaPawn[][] tiles;
     
     public int whitePawnsLeft;
     public int blackPawnsLeft;
@@ -93,7 +93,7 @@ public class Damka extends JFrame {
     
     /**
      * Create a new Damka object (Board game as a frame)
-     * Initalize the frame with panels a JComponents
+     * Initialize the frame with panels a JComponents
      * @param length: Length of the board (width and height
      * @param pawnRows: Number of pawn rows each side has to begin with
      */
@@ -103,7 +103,7 @@ public class Damka extends JFrame {
         PAWN_ROWS = pawnRows;
         TILE_SIZE = 600/LENGTH;
         
-        tiles = new DamkaTile[LENGTH][LENGTH];
+        tiles = new DamkaPawn[LENGTH][LENGTH];
         whitePawnsLeft = LENGTH * PAWN_ROWS / 2;
         blackPawnsLeft = LENGTH * PAWN_ROWS / 2;
         
@@ -120,7 +120,7 @@ public class Damka extends JFrame {
                 evalMsg.setVisible(!evalMsg.isVisible());
                 evaluation.setVisible(!evaluation.isVisible());
                 stateMsg.setVisible(!stateMsg.isVisible());
-                if (ie.getStateChange() == 1)
+                if (ie.getStateChange() == ItemEvent.SELECTED)
                     evaluate();
                 else
                     evalPanel.setBackground(Color.BLACK);
@@ -141,48 +141,48 @@ public class Damka extends JFrame {
     }
 
     /**
-     * Initialize the game panel with pawns in the corrent colors
+     * Initialize the game panel with pawns in the correct colors
      */
-    public void start()
+    void start()
     {
         //<editor-fold defaultstate="collapsed" desc="create tiles and add them to the game panel">
         for (int i = 0; i < LENGTH; i++) {
             for (int j = 0; j < LENGTH; j++) {
-                tiles[i][j] = new DamkaTile(i, j, this);
+                tiles[i][j] = new DamkaPawn(i, j, this);
                 gamePanel.add(tiles[i][j]);
             }
         }
         //</editor-fold>
 
         // Initialize Images array with the possible images
-        (new DamkaTile()).initialize();
+        (new DamkaPawn()).initialize();
 
         //<editor-fold defaultstate="collapsed" desc="set pawn colors">
         // set white tales
         for (int i = 0; i < LENGTH; i++) {
             for (int j = i % 2; j < LENGTH; j += 2) {
-                tiles[i][j].setColor(DamkaTile.TilePawn.WHITE.ordinal());
+                tiles[i][j].setColor(TileColor.WHITE);
             }
         }
         
         // set the white pawns
         for (int i = LENGTH - PAWN_ROWS; i < LENGTH; i++) {
             for (int j = 1 - i % 2; j < LENGTH; j += 2) {
-                tiles[i][j].setColor(DamkaTile.TilePawn.WHITE_PAWN.ordinal());
+                tiles[i][j].setColor(TileColor.WHITE_PAWN);
             }
         }
 
         // set the black pawns
         for (int i = 0; i < PAWN_ROWS; i++) {
             for (int j = 1 - (i % 2); j < LENGTH; j += 2) {
-                tiles[i][j].setColor(DamkaTile.TilePawn.BLACK_PAWN.ordinal());
+                tiles[i][j].setColor(TileColor.BLACK_PAWN);
             }
         }
 
         // set the black remaining slots
         for (int i = PAWN_ROWS; i < LENGTH - PAWN_ROWS; i++) {
             for (int j = 1 - i % 2; j < LENGTH; j += 2) {
-                tiles[i][j].setColor(DamkaTile.TilePawn.BLACK.ordinal());
+                tiles[i][j].setColor(TileColor.BLACK);
             }
         }
         //</editor-fold>
@@ -203,18 +203,18 @@ public class Damka extends JFrame {
      * Turn the chosen pawn off, as well as all the red squares.
      * If the pawn is A queen, call turnQueenOff()
      */
-    public void turnPawnOff() {
-        if (tiles[chosenPawnRow][chosenPawnCol].color == DamkaTile.TilePawn.BLACK_QUEEN_CHOSEN.ordinal() ||
-            tiles[chosenPawnRow][chosenPawnCol].color == DamkaTile.TilePawn.WHITE_QUEEN_CHOSEN.ordinal())
+    void turnPawnOff() {
+        if (tiles[chosenPawnRow][chosenPawnCol].color == TileColor.BLACK_QUEEN_CHOSEN ||
+            tiles[chosenPawnRow][chosenPawnCol].color == TileColor.WHITE_QUEEN_CHOSEN)
         {
             turnQueenOff();
             return;
         }
 
         if (turn) 
-            tiles[chosenPawnRow][chosenPawnCol].setColor(DamkaTile.TilePawn.BLACK_PAWN.ordinal()); 
+            tiles[chosenPawnRow][chosenPawnCol].setColor(TileColor.BLACK_PAWN);
         else 
-            tiles[chosenPawnRow][chosenPawnCol].setColor(DamkaTile.TilePawn.WHITE_PAWN.ordinal());
+            tiles[chosenPawnRow][chosenPawnCol].setColor(TileColor.WHITE_PAWN);
         
         turnRedSquaresOff();
         isPawnChosen = false;
@@ -226,9 +226,9 @@ public class Damka extends JFrame {
     public void turnQueenOff()
     {
         if (!turn) {
-            tiles[chosenPawnRow][chosenPawnCol].setColor(DamkaTile.TilePawn.WHITE_QUEEN.ordinal());
+            tiles[chosenPawnRow][chosenPawnCol].setColor(TileColor.WHITE_QUEEN);
         } else {
-            tiles[chosenPawnRow][chosenPawnCol].setColor(DamkaTile.TilePawn.BLACK_QUEEN.ordinal());
+            tiles[chosenPawnRow][chosenPawnCol].setColor(TileColor.BLACK_QUEEN);
         }
 
         turnRedSquaresOff();
@@ -242,22 +242,22 @@ public class Damka extends JFrame {
      * 3) turn on the red pawn squares
      * @param tile: the pawn to turn on
      */
-    public void turnPawnOn(DamkaTile tile)
+    public void turnPawnOn(DamkaPawn tile)
     {
         chosenPawnRow = tile.row;
         chosenPawnCol = tile.col;
         isPawnChosen = true;
 
         // turn the pawn on if it is the correct turn
-        if (tile.color == DamkaTile.TilePawn.WHITE_PAWN.ordinal()) {
+        if (tile.color == TileColor.WHITE_PAWN) {
             if (!turn) {
-                tile.setColor(DamkaTile.TilePawn.WHITE_PAWN_CHOSEN.ordinal());
+                tile.setColor(TileColor.WHITE_PAWN_CHOSEN);
                 turnRedPawnSquaresOn();
             } else 
                 isPawnChosen = false;
         } else {
             if (turn) {
-                tile.setColor(DamkaTile.TilePawn.BLACK_PAWN_CHOSEN.ordinal());
+                tile.setColor(TileColor.BLACK_PAWN_CHOSEN);
                 turnRedPawnSquaresOn();
             } else {
                 isPawnChosen = false;
@@ -272,23 +272,23 @@ public class Damka extends JFrame {
      * 2) change the pawn color
      * 3) turn on the red queen squares
      */
-    public void turnQueenOn(DamkaTile tile)
+    public void turnQueenOn(DamkaPawn tile)
     {
         chosenPawnRow = tile.row;
         chosenPawnCol = tile.col;
         isPawnChosen = true;
 
         // turn the queen on if it is the correct turn
-        if (tile.color == DamkaTile.TilePawn.WHITE_QUEEN.ordinal()) {
+        if (tile.color == TileColor.WHITE_QUEEN) {
             if (!turn) {
-                tile.setColor(DamkaTile.TilePawn.WHITE_QUEEN_CHOSEN.ordinal());
+                tile.setColor(TileColor.WHITE_QUEEN_CHOSEN);
                 turnRedQueenSquaresOn();
             } else {
                 isPawnChosen = false;
             }
         } else {
             if (turn) {
-                tile.setColor(DamkaTile.TilePawn.BLACK_QUEEN_CHOSEN.ordinal());
+                tile.setColor(TileColor.BLACK_QUEEN_CHOSEN);
                 turnRedQueenSquaresOn();
             } else {
                 isPawnChosen = false;
@@ -305,52 +305,50 @@ public class Damka extends JFrame {
         if (!isForced) {
             int direction = (turn) ? 1 : -1;
             if (tiles[chosenPawnRow][chosenPawnCol].col != 0)
-                if (tiles[chosenPawnRow + direction][chosenPawnCol - 1].color == 
-                        DamkaTile.TilePawn.BLACK.ordinal())
-                    tiles[chosenPawnRow + direction][chosenPawnCol - 1].setColor(DamkaTile.TilePawn.RED.ordinal());
+                if (tiles[chosenPawnRow + direction][chosenPawnCol - 1].color == TileColor.BLACK)
+                    tiles[chosenPawnRow + direction][chosenPawnCol - 1].setColor(TileColor.RED);
             if (tiles[chosenPawnRow][chosenPawnCol].col != LENGTH - 1)
-                if (tiles[chosenPawnRow + direction][chosenPawnCol + 1].color == 
-                        DamkaTile.TilePawn.BLACK.ordinal())
-                    tiles[chosenPawnRow + direction][chosenPawnCol + 1].setColor(DamkaTile.TilePawn.RED.ordinal());                
+                if (tiles[chosenPawnRow + direction][chosenPawnCol + 1].color == TileColor.BLACK)
+                    tiles[chosenPawnRow + direction][chosenPawnCol + 1].setColor(TileColor.RED);
         }
         else
         {
-            int colorEaten1;
-            int colorEaten2;
+            TileColor colorEaten1;
+            TileColor colorEaten2;
             
             // Determine the colors that are searched
-            if (tiles[chosenPawnRow][chosenPawnCol].color == DamkaTile.TilePawn.BLACK_PAWN_CHOSEN.ordinal())
+            if (tiles[chosenPawnRow][chosenPawnCol].color == TileColor.BLACK_PAWN_CHOSEN)
             {    
-                colorEaten1 = DamkaTile.TilePawn.WHITE_PAWN.ordinal();
-                colorEaten2 = DamkaTile.TilePawn.WHITE_QUEEN.ordinal();
+                colorEaten1 = TileColor.WHITE_PAWN;
+                colorEaten2 = TileColor.WHITE_QUEEN;
             }
             else
             {
-                colorEaten1 = DamkaTile.TilePawn.BLACK_PAWN.ordinal();
-                colorEaten2 = DamkaTile.TilePawn.BLACK_QUEEN.ordinal();
+                colorEaten1 = TileColor.BLACK_PAWN;
+                colorEaten2 = TileColor.BLACK_QUEEN;
             }
              
             // Make sure this index isn't out of bounds and compare the tile color to the colors searched
             if (tiles[chosenPawnRow][chosenPawnCol].col >= 2 && tiles[chosenPawnRow][chosenPawnCol].row >= 2)
-                if (tiles[chosenPawnRow - 2][chosenPawnCol - 2].color == DamkaTile.TilePawn.BLACK.ordinal() &&
+                if (tiles[chosenPawnRow - 2][chosenPawnCol - 2].color == TileColor.BLACK &&
                     ( tiles[chosenPawnRow - 1][chosenPawnCol - 1].color == colorEaten1  ||
                       tiles[chosenPawnRow - 1][chosenPawnCol - 1].color == colorEaten2))
-                    tiles[chosenPawnRow - 2][chosenPawnCol - 2].setColor(DamkaTile.TilePawn.RED.ordinal());
+                    tiles[chosenPawnRow - 2][chosenPawnCol - 2].setColor(TileColor.RED);
             if (tiles[chosenPawnRow][chosenPawnCol].col >= 2 && tiles[chosenPawnRow][chosenPawnCol].row <= LENGTH - 3)
-                if (tiles[chosenPawnRow + 2][chosenPawnCol - 2].color == DamkaTile.TilePawn.BLACK.ordinal() &&
+                if (tiles[chosenPawnRow + 2][chosenPawnCol - 2].color == TileColor.BLACK &&
                     (tiles[chosenPawnRow + 1][chosenPawnCol - 1].color == colorEaten1 || 
                      tiles[chosenPawnRow + 1][chosenPawnCol - 1].color == colorEaten2))
-                    tiles[chosenPawnRow + 2][chosenPawnCol - 2].setColor(DamkaTile.TilePawn.RED.ordinal());
+                    tiles[chosenPawnRow + 2][chosenPawnCol - 2].setColor(TileColor.RED);
             if (tiles[chosenPawnRow][chosenPawnCol].col <= LENGTH - 3 && tiles[chosenPawnRow][chosenPawnCol].row >= 2)
-                if (tiles[chosenPawnRow - 2][chosenPawnCol + 2].color == DamkaTile.TilePawn.BLACK.ordinal() &&
+                if (tiles[chosenPawnRow - 2][chosenPawnCol + 2].color == TileColor.BLACK &&
                     (tiles[chosenPawnRow - 1][chosenPawnCol + 1].color == colorEaten1 || 
                     tiles[chosenPawnRow - 1][chosenPawnCol + 1].color == colorEaten2))
-                    tiles[chosenPawnRow - 2][chosenPawnCol + 2].setColor(DamkaTile.TilePawn.RED.ordinal());
+                    tiles[chosenPawnRow - 2][chosenPawnCol + 2].setColor(TileColor.RED);
             if (tiles[chosenPawnRow][chosenPawnCol].col <= LENGTH - 3 && tiles[chosenPawnRow][chosenPawnCol].row <= LENGTH - 3)
-                if (tiles[chosenPawnRow + 2][chosenPawnCol + 2].color == DamkaTile.TilePawn.BLACK.ordinal() &&
+                if (tiles[chosenPawnRow + 2][chosenPawnCol + 2].color == TileColor.BLACK &&
                     (tiles[chosenPawnRow + 1][chosenPawnCol + 1].color == colorEaten1 || 
                     tiles[chosenPawnRow + 1][chosenPawnCol + 1].color == colorEaten2))
-                    tiles[chosenPawnRow + 2][chosenPawnCol + 2].setColor(DamkaTile.TilePawn.RED.ordinal());
+                    tiles[chosenPawnRow + 2][chosenPawnCol + 2].setColor(TileColor.RED);
         }
     }
 
@@ -363,26 +361,26 @@ public class Damka extends JFrame {
      */
     public void turnRedQueenSquaresOn()
     {
-        DamkaTile enemy = null; // The enemy tile in the current iteration
-        int enemyColor = -999; // The color of the enemy pawn found (used as a 'temp' variable)
-        int currentColor; // Current color index of tile checked
+        DamkaPawn enemy = null; // The enemy tile in the current iteration
+        TileColor enemyColor = null; // The color of the enemy pawn found
+        TileColor currentColor; // Current color index of tile checked
         int currentRowIndex; // Current row index of tile checked
         int currentColIndex; // Current col index of tile checked
-        int colorEaten1; // Pawn color to eat
-        int colorEaten2; // Queen color to eat
+        TileColor colorEaten1; // Pawn color to eat
+        TileColor colorEaten2; // Queen color to eat
         boolean enemyFound; // Did we came across enemy tile in the current iteration
         boolean doubleFound; // Did we find double option in the current iteration
         
         // Determine the "pray" colors in case position is "must-capture"
         if (turn)
         {
-            colorEaten1 = DamkaTile.TilePawn.WHITE_PAWN.ordinal();
-            colorEaten2 = DamkaTile.TilePawn.WHITE_QUEEN.ordinal();
+            colorEaten1 = TileColor.WHITE_PAWN;
+            colorEaten2 = TileColor.WHITE_QUEEN;
         }
         else
         {
-            colorEaten1 = DamkaTile.TilePawn.BLACK_PAWN.ordinal();
-            colorEaten2 = DamkaTile.TilePawn.BLACK_QUEEN.ordinal();
+            colorEaten1 = TileColor.BLACK_PAWN;
+            colorEaten2 = TileColor.BLACK_QUEEN;
         }
         
         for (int i = 0; i < 4; i++)
@@ -412,26 +410,26 @@ public class Damka extends JFrame {
             // in the current direction.
             while (true)
             {
-                if (!isForced && currentColor != DamkaTile.TilePawn.BLACK.ordinal())
+                if (!isForced && currentColor != TileColor.BLACK)
                     break;
-                if (isForced && currentColor != DamkaTile.TilePawn.BLACK.ordinal() && enemyFound)
+                if (isForced && currentColor != TileColor.BLACK && enemyFound)
                     break;
                     
                 // If The current color is black and either a capture exists and enemy found
                 // or enemy isn't found and there is no capture (using XOR as boolean operator),
                 // then the square is valid option, hence I turn that black square to red.
-                if (!(isForced ^ enemyFound) && currentColor == DamkaTile.TilePawn.BLACK.ordinal())
+                if (isForced == enemyFound && currentColor == TileColor.BLACK)
                 {
                     // Check if a double is possible
                     if (isForced && !doubleFound)
                     {
-                        enemy.setColor(DamkaTile.TilePawn.BLACK.ordinal());
+                        enemy.setColor(TileColor.BLACK);
                         if (canQueenCapture(currentRowIndex, currentColIndex, colorEaten1, colorEaten2))
                             doubleFound = true;
                         enemy.setColor(enemyColor);
                     }
                     
-                    tiles[currentRowIndex][currentColIndex].setColor(DamkaTile.TilePawn.RED.ordinal());
+                    tiles[currentRowIndex][currentColIndex].setColor(TileColor.RED);
                 }
                 
                 currentRowIndex += QUEEN_DIRS[i][0];
@@ -459,20 +457,20 @@ public class Damka extends JFrame {
             // If double found, remove red squares that do not lead to double
             if (doubleFound)
             {
-                enemy.setColor(DamkaTile.TilePawn.BLACK.ordinal()); // will be returned
+                enemy.setColor(TileColor.BLACK); // will be returned
                 if (currentRowIndex == -1 || currentRowIndex == LENGTH ||
                     currentColIndex == -1 || currentColIndex == LENGTH ||
-                    tiles[currentRowIndex][currentColIndex].color != DamkaTile.TilePawn.RED.ordinal())
+                    tiles[currentRowIndex][currentColIndex].color != TileColor.RED)
                 {
                     currentRowIndex -= QUEEN_DIRS[i][0];
                     currentColIndex -= QUEEN_DIRS[i][1];
                 }
                 currentColor = tiles[currentRowIndex][currentColIndex].color;
             
-                while (currentColor == DamkaTile.TilePawn.RED.ordinal())
+                while (currentColor == TileColor.RED)
                 {
                         if (!canQueenCapture(currentRowIndex, currentColIndex, colorEaten1, colorEaten2))
-                        tiles[currentRowIndex][currentColIndex].setColor(DamkaTile.TilePawn.BLACK.ordinal());
+                        tiles[currentRowIndex][currentColIndex].setColor(TileColor.BLACK);
 
                     currentRowIndex -= QUEEN_DIRS[i][0];
                     currentColIndex -= QUEEN_DIRS[i][1];
@@ -491,8 +489,8 @@ public class Damka extends JFrame {
     {
         for (int i = 0; i < LENGTH; i++) {
             for (int j = 1 - i % 2; j < LENGTH; j += 2) {
-                if (tiles[i][j].color == DamkaTile.TilePawn.RED.ordinal()) {
-                    tiles[i][j].setColor(DamkaTile.TilePawn.BLACK.ordinal());
+                if (tiles[i][j].color == TileColor.RED) {
+                    tiles[i][j].setColor(TileColor.BLACK);
                 }
             }
         }
@@ -503,16 +501,16 @@ public class Damka extends JFrame {
      * Premote the pawn to a queen if needed.
      * @param tile: tile to move to
      */
-    public void movePawn(DamkaTile tile)
+    public void movePawn(DamkaPawn tile)
     {  
         movesWithoutProgress = 0;
         if (turn)
         {
             if (tile.row != LENGTH - 1)
-                tile.setColor(DamkaTile.TilePawn.BLACK_PAWN.ordinal());
+                tile.setColor(TileColor.BLACK_PAWN);
             else
             {
-                tile.setColor(DamkaTile.TilePawn.BLACK_QUEEN.ordinal());
+                tile.setColor(TileColor.BLACK_QUEEN);
                 if (isComputerPlaying && !Computer.comp.movesStack.isEmpty())//changedd
                     Computer.comp.movesStack.peek().wasPremotion = true;
                 blackQueens++;
@@ -522,10 +520,10 @@ public class Damka extends JFrame {
         else
         {
             if (tile.row != 0)
-                tile.setColor(DamkaTile.TilePawn.WHITE_PAWN.ordinal());
+                tile.setColor(TileColor.WHITE_PAWN);
             else
             {
-                tile.setColor(DamkaTile.TilePawn.WHITE_QUEEN.ordinal());
+                tile.setColor(TileColor.WHITE_QUEEN);
                 if (isComputerPlaying && !Computer.comp.movesStack.isEmpty())
                     Computer.comp.movesStack.peek().wasPremotion = true;
                 whiteQueens++;
@@ -533,7 +531,7 @@ public class Damka extends JFrame {
                 
         }
         
-        tiles[chosenPawnRow][chosenPawnCol].setColor(DamkaTile.TilePawn.BLACK.ordinal());
+        tiles[chosenPawnRow][chosenPawnCol].setColor(TileColor.BLACK);
         isPawnChosen = false;
         turnRedSquaresOff();
         changeTurn();
@@ -544,17 +542,17 @@ public class Damka extends JFrame {
      * Announce a draw if needed.
      * @param tile: tile to move the queen to.
      */
-    public void moveQueen(DamkaTile tile)
+    public void moveQueen(DamkaPawn tile)
     {
         movesWithoutProgress++;
         if (movesWithoutProgress == MOVES_FOR_DRAW && !isComputerPlaying)
             endGame("Draw!!!");
         if (turn)
-            tile.setColor(DamkaTile.TilePawn.BLACK_QUEEN.ordinal());
+            tile.setColor(TileColor.BLACK_QUEEN);
         else
-            tile.setColor(DamkaTile.TilePawn.WHITE_QUEEN.ordinal());
+            tile.setColor(TileColor.WHITE_QUEEN);
         
-        tiles[chosenPawnRow][chosenPawnCol].setColor(DamkaTile.TilePawn.BLACK.ordinal());
+        tiles[chosenPawnRow][chosenPawnCol].setColor(TileColor.BLACK);
         isPawnChosen = false;
         turnRedSquaresOff();
         changeTurn();
@@ -569,35 +567,6 @@ public class Damka extends JFrame {
      */
     public void changeTurn()
     {
-        //<editor-fold defaultstate="collapsed" desc="flip board">
-        /*gamePanel.removeAll();
-        gamePanel.repaint();
-        gamePanel.
-        
-        if (turn)
-        {
-        for (int i = 0; i < LENGTH; i++)
-        {
-        for (int j = 0; j < LENGTH; j++)
-        {
-        gamePanel.add(tiles[i][j]);
-        }
-        }
-        }
-        else
-        {
-        for (int i = LENGTH - 1; i >= 0; i--)
-        {
-        for (int j = LENGTH - 1; j >= 0; j--)
-        {
-        gamePanel.add(tiles[i][j]);
-        }
-        }
-        }
-        
-        gamePanel.repaint();
-        gamePanel.*/
-//</editor-fold>
         
         showEval.setEnabled(true);
         turn = !turn;
@@ -614,12 +583,12 @@ public class Damka extends JFrame {
             if (isComputerPlaying)
                 return;
             if (turn && !isForced && blackPawnsLeft <= MAX_PAWNS_IN_STALEMATE &&
-                !canPlay(DamkaTile.TilePawn.BLACK_PAWN.ordinal(),
-                         DamkaTile.TilePawn.BLACK_QUEEN.ordinal()))
+                !canPlay(TileColor.BLACK_PAWN,
+                         TileColor.BLACK_QUEEN))
                 endGame("White Wins!!!");
             else if (!turn && !isForced && whitePawnsLeft <= MAX_PAWNS_IN_STALEMATE &&
-                     !canPlay(DamkaTile.TilePawn.WHITE_PAWN.ordinal(),
-                              DamkaTile.TilePawn.WHITE_QUEEN.ordinal()))
+                     !canPlay(TileColor.WHITE_PAWN,
+                              TileColor.WHITE_QUEEN))
                 endGame("Black Wins!!!");
             else if (showEval.isSelected())
                 evaluate();
@@ -629,24 +598,24 @@ public class Damka extends JFrame {
     
     private boolean DoesCaptureExist()
     {
-        int colorEating1;
-        int colorEating2;
-        int colorEaten1;
-        int colorEaten2;
+        TileColor colorEating1;
+        TileColor colorEating2;
+        TileColor colorEaten1;
+        TileColor colorEaten2;
         
         if (turn)
         {
-            colorEating1 = DamkaTile.TilePawn.BLACK_PAWN.ordinal();
-            colorEating2 = DamkaTile.TilePawn.BLACK_QUEEN.ordinal();
-            colorEaten1 = DamkaTile.TilePawn.WHITE_PAWN.ordinal();
-            colorEaten2 = DamkaTile.TilePawn.WHITE_QUEEN.ordinal();
+            colorEating1 = TileColor.BLACK_PAWN;
+            colorEating2 = TileColor.BLACK_QUEEN;
+            colorEaten1 = TileColor.WHITE_PAWN;
+            colorEaten2 = TileColor.WHITE_QUEEN;
         }
         else
         {
-            colorEating1 = DamkaTile.TilePawn.WHITE_PAWN.ordinal();
-            colorEating2 = DamkaTile.TilePawn.WHITE_QUEEN.ordinal();
-            colorEaten1 = DamkaTile.TilePawn.BLACK_PAWN.ordinal();
-            colorEaten2 = DamkaTile.TilePawn.BLACK_QUEEN.ordinal();
+            colorEating1 = TileColor.WHITE_PAWN;
+            colorEating2 = TileColor.WHITE_QUEEN;
+            colorEaten1 = TileColor.BLACK_PAWN;
+            colorEaten2 = TileColor.BLACK_QUEEN;
         }
         
         for (int i = 0; i < LENGTH; i++)
@@ -667,34 +636,33 @@ public class Damka extends JFrame {
         return false;
     }
     
-   private boolean canPawnCapture(int row, int col, int colorEaten1, int colorEaten2)
+   private boolean canPawnCapture(int row, int col, TileColor colorEaten1, TileColor colorEaten2)
    {
        if (col >= 2 && row >= 2)
-            if (tiles[row - 2][col - 2].color == DamkaTile.TilePawn.BLACK.ordinal() &&
+            if (tiles[row - 2][col - 2].color == TileColor.BLACK &&
                 (tiles[row - 1][col - 1].color == colorEaten1  ||
                 tiles[row - 1][col - 1].color == colorEaten2))
                 return true;
         if (col >= 2 && row <= LENGTH - 3)
-            if (tiles[row + 2][col - 2].color == DamkaTile.TilePawn.BLACK.ordinal() &&
+            if (tiles[row + 2][col - 2].color == TileColor.BLACK &&
                 (tiles[row + 1][col - 1].color == colorEaten1 || 
                 tiles[row + 1][col - 1].color == colorEaten2))
                 return true;
         if (col <= LENGTH - 3 && row >= 2)
-            if (tiles[row - 2][col + 2].color == DamkaTile.TilePawn.BLACK.ordinal() &&
+            if (tiles[row - 2][col + 2].color == TileColor.BLACK &&
                 (tiles[row - 1][col + 1].color == colorEaten1 || 
                 tiles[row - 1][col + 1].color == colorEaten2))
                 return true;
         if (col <= LENGTH - 3 && row <= LENGTH - 3)
-            if (tiles[row + 2][col + 2].color == DamkaTile.TilePawn.BLACK.ordinal() &&
-                (tiles[row + 1][col + 1].color == colorEaten1 || 
-                tiles[row + 1][col + 1].color == colorEaten2))
-                return true;
+            return tiles[row + 2][col + 2].color == TileColor.BLACK &&
+                    (tiles[row + 1][col + 1].color == colorEaten1 ||
+                            tiles[row + 1][col + 1].color == colorEaten2);
        return false;
    }
    
-   private boolean canQueenCapture(int row, int col, int colorEaten1, int colorEaten2)
+   private boolean canQueenCapture(int row, int col, TileColor colorEaten1, TileColor colorEaten2)
    {
-        int currentColor;
+        TileColor currentColor;
         int currentRowIndex;
         int currentColIndex;
         boolean edgeReached;
@@ -708,8 +676,8 @@ public class Damka extends JFrame {
                 continue;
             currentColor = tiles[currentRowIndex][currentColIndex].color;
             
-            while (currentColor == DamkaTile.TilePawn.BLACK.ordinal() ||
-                   currentColor == DamkaTile.TilePawn.RED.ordinal())
+            while (currentColor == TileColor.BLACK ||
+                   currentColor == TileColor.RED)
             {
                 currentRowIndex += QUEEN_DIRS[i][0];
                 currentColIndex += QUEEN_DIRS[i][1];
@@ -732,7 +700,7 @@ public class Damka extends JFrame {
                     currentColIndex == -1 || currentColIndex == LENGTH)
                     continue;
                 currentColor = tiles[currentRowIndex][currentColIndex].color;
-                if (currentColor == DamkaTile.TilePawn.BLACK.ordinal())
+                if (currentColor == TileColor.BLACK)
                     return true;
             }
         }
@@ -745,7 +713,7 @@ public class Damka extends JFrame {
      * Call the correct capture function.
      * @param tile: tile to move to.
      */
-    public void Capture(DamkaTile tile)
+    public void Capture(DamkaPawn tile)
    {
        showEval.setEnabled(false);
        movesWithoutProgress = 0;
@@ -754,22 +722,22 @@ public class Damka extends JFrame {
        else
            blackPawnsLeft--;
            
-       int eatingTileColor = tiles[chosenPawnRow][chosenPawnCol].color;
-       tiles[chosenPawnRow][chosenPawnCol].setColor(DamkaTile.TilePawn.BLACK.ordinal());
+       TileColor eatingTileColor = tiles[chosenPawnRow][chosenPawnCol].color;
+       tiles[chosenPawnRow][chosenPawnCol].setColor(TileColor.BLACK);
        turnRedSquaresOff();
-       if (eatingTileColor == DamkaTile.TilePawn.WHITE_PAWN_CHOSEN.ordinal() ||
-           eatingTileColor == DamkaTile.TilePawn.BLACK_PAWN_CHOSEN.ordinal())
+       if (eatingTileColor == TileColor.WHITE_PAWN_CHOSEN ||
+           eatingTileColor == TileColor.BLACK_PAWN_CHOSEN)
            CaptureWithPawn(tile);
        else
            CaptureWithQueen(tile);
        
    }
    
-   private void CaptureWithPawn(DamkaTile tile)
+   private void CaptureWithPawn(DamkaPawn tile)
    {
-       DamkaTile current = tiles[chosenPawnRow][chosenPawnCol];
-       DamkaTile deadTile;
-       int colorToEat1, colorToEat2;
+       DamkaPawn current = tiles[chosenPawnRow][chosenPawnCol];
+       DamkaPawn deadTile;
+       TileColor colorToEat1, colorToEat2;
        int deadTileRow = (tile.row + current.row)/2;
        int deadTileCol = (tile.col + current.col)/2;
        if (isComputerPlaying && !Computer.comp.movesStack.isEmpty())
@@ -783,35 +751,35 @@ public class Damka extends JFrame {
        deadTile = tiles[deadTileRow][deadTileCol];
        if (turn)
        {
-           if (deadTile.color == DamkaTile.TilePawn.WHITE_QUEEN.ordinal())
+           if (deadTile.color == TileColor.WHITE_QUEEN)
                whiteQueens--;
-           colorToEat1 = DamkaTile.TilePawn.WHITE_PAWN.ordinal();
-           colorToEat2 = DamkaTile.TilePawn.WHITE_QUEEN.ordinal();
-           deadTile.setColor(DamkaTile.TilePawn.DEAD_WHITE.ordinal());
+           colorToEat1 = TileColor.WHITE_PAWN;
+           colorToEat2 = TileColor.WHITE_QUEEN;
+           deadTile.setColor(TileColor.DEAD_WHITE);
            if (tile.row == LENGTH - 1)
            {
-               tile.setColor(DamkaTile.TilePawn.BLACK_QUEEN.ordinal());
+               tile.setColor(TileColor.BLACK_QUEEN);
                wasPremoted = true;
                blackQueens++;
            }
            else
-               tile.setColor(DamkaTile.TilePawn.BLACK_PAWN.ordinal());
+               tile.setColor(TileColor.BLACK_PAWN);
        }
        else
        {
-           if (deadTile.color == DamkaTile.TilePawn.BLACK_QUEEN.ordinal())
+           if (deadTile.color == TileColor.BLACK_QUEEN)
                blackQueens--;
-           colorToEat1 = DamkaTile.TilePawn.BLACK_PAWN.ordinal();
-           colorToEat2 = DamkaTile.TilePawn.BLACK_QUEEN.ordinal();
-           deadTile.setColor(DamkaTile.TilePawn.DEAD_BLACK.ordinal());
+           colorToEat1 = TileColor.BLACK_PAWN;
+           colorToEat2 = TileColor.BLACK_QUEEN;
+           deadTile.setColor(TileColor.DEAD_BLACK);
            if (tile.row == 0)
            {
-               tile.setColor(DamkaTile.TilePawn.WHITE_QUEEN.ordinal());
+               tile.setColor(TileColor.WHITE_QUEEN);
                wasPremoted = true;
                whiteQueens++;
            }
            else   
-               tile.setColor(DamkaTile.TilePawn.WHITE_PAWN.ordinal());
+               tile.setColor(TileColor.WHITE_PAWN);
        }
        
        if (isComputerPlaying && !Computer.comp.movesStack.isEmpty())
@@ -822,9 +790,9 @@ public class Damka extends JFrame {
        {
            isOnStreak = true;
            if (turn)
-               tile.setColor(DamkaTile.TilePawn.BLACK_PAWN_CHOSEN.ordinal());
+               tile.setColor(TileColor.BLACK_PAWN_CHOSEN);
            else
-               tile.setColor(DamkaTile.TilePawn.WHITE_PAWN_CHOSEN.ordinal());
+               tile.setColor(TileColor.WHITE_PAWN_CHOSEN);
            
            isPawnChosen= true;
            chosenPawnRow = tile.row;
@@ -849,9 +817,9 @@ public class Damka extends JFrame {
        {
            isOnStreak = true;
            if (turn)
-               tile.setColor(DamkaTile.TilePawn.BLACK_QUEEN_CHOSEN.ordinal());
+               tile.setColor(TileColor.BLACK_QUEEN_CHOSEN);
            else
-               tile.setColor(DamkaTile.TilePawn.WHITE_QUEEN_CHOSEN.ordinal());
+               tile.setColor(TileColor.WHITE_QUEEN_CHOSEN);
            
            isPawnChosen= true;
            chosenPawnRow = tile.row;
@@ -881,11 +849,11 @@ public class Damka extends JFrame {
        
    }
    
-   private void CaptureWithQueen(DamkaTile tile)
+   private void CaptureWithQueen(DamkaPawn tile)
    {
-       DamkaTile current = tiles[chosenPawnRow][chosenPawnCol];
-       DamkaTile deadTile;
-       int colorToEat1, colorToEat2;
+       DamkaPawn current = tiles[chosenPawnRow][chosenPawnCol];
+       DamkaPawn deadTile;
+       TileColor colorToEat1, colorToEat2;
        int rowDir = (int)Math.signum(tile.row - current.row);
        int colDir = (int)Math.signum(tile.col - current.col);
        int deadTileRow = current.row + rowDir;
@@ -893,15 +861,15 @@ public class Damka extends JFrame {
        
        if (turn)
        {
-           tile.setColor(DamkaTile.TilePawn.BLACK_QUEEN.ordinal());
-           colorToEat1 = DamkaTile.TilePawn.WHITE_PAWN.ordinal();
-           colorToEat2 = DamkaTile.TilePawn.WHITE_QUEEN.ordinal();
+           tile.setColor(TileColor.BLACK_QUEEN);
+           colorToEat1 = TileColor.WHITE_PAWN;
+           colorToEat2 = TileColor.WHITE_QUEEN;
        }
        else
        {
-           tile.setColor(DamkaTile.TilePawn.WHITE_QUEEN.ordinal());
-           colorToEat1 = DamkaTile.TilePawn.BLACK_PAWN.ordinal();
-           colorToEat2 = DamkaTile.TilePawn.BLACK_QUEEN.ordinal();
+           tile.setColor(TileColor.WHITE_QUEEN);
+           colorToEat1 = TileColor.BLACK_PAWN;
+           colorToEat2 = TileColor.BLACK_QUEEN;
        }
        
        deadTile = tiles[deadTileRow][deadTileCol];
@@ -921,16 +889,16 @@ public class Damka extends JFrame {
        
        if (turn)
        {
-           if (deadTile.color == DamkaTile.TilePawn.WHITE_QUEEN.ordinal())
+           if (deadTile.color == TileColor.WHITE_QUEEN)
                whiteQueens--;
-           deadTile.setColor(DamkaTile.TilePawn.DEAD_WHITE.ordinal());
+           deadTile.setColor(TileColor.DEAD_WHITE);
        }
        else
        {
-           if (deadTile.color == DamkaTile.TilePawn.BLACK_QUEEN.ordinal())
+           if (deadTile.color == TileColor.BLACK_QUEEN)
                blackQueens--;
 
-           deadTile.setColor(DamkaTile.TilePawn.DEAD_BLACK.ordinal());
+           deadTile.setColor(TileColor.DEAD_BLACK);
        }
        
        // Check for strak
@@ -942,9 +910,9 @@ public class Damka extends JFrame {
            chosenPawnRow = tile.row;
            chosenPawnCol = tile.col;
            if (turn)
-               tile.setColor(DamkaTile.TilePawn.BLACK_QUEEN_CHOSEN.ordinal());
+               tile.setColor(TileColor.BLACK_QUEEN_CHOSEN);
            else
-               tile.setColor(DamkaTile.TilePawn.WHITE_QUEEN_CHOSEN.ordinal());
+               tile.setColor(TileColor.WHITE_QUEEN_CHOSEN);
            turnRedQueenSquaresOn();
            
            if (isComputer && !isComputerPlaying && turn)
@@ -969,9 +937,9 @@ public class Damka extends JFrame {
    {
        for (int i = 0; i < LENGTH; i++) {
             for (int j = 1 - i % 2; j < LENGTH; j += 2) {
-                if (tiles[i][j].color == DamkaTile.TilePawn.DEAD_WHITE.ordinal() ||
-                    tiles[i][j].color == DamkaTile.TilePawn.DEAD_BLACK.ordinal()) {
-                    tiles[i][j].setColor(DamkaTile.TilePawn.BLACK.ordinal());
+                if (tiles[i][j].color == TileColor.DEAD_WHITE ||
+                    tiles[i][j].color == TileColor.DEAD_BLACK) {
+                    tiles[i][j].setColor(TileColor.BLACK);
                 }
             }
         }
@@ -992,13 +960,9 @@ public class Damka extends JFrame {
        gameOverL.setBounds(60, 95, 100, 20);
        gameOverB.setBounds(35, 20, 120, 40);
        
-       gameOverB.addActionListener(new ActionListener()
-       {
-           @Override
-           public void actionPerformed(ActionEvent ae) {
-               gameOverF.dispose();
-               dispose();
-           }
+       gameOverB.addActionListener(ae -> {
+           gameOverF.dispose();
+           dispose();
        });
        
        gameOverF.add(gameOverL);
@@ -1016,10 +980,10 @@ public class Damka extends JFrame {
     /**
      * Checks if a move is possible in the current position
      * @param movingColor1: Color of moving pawn
-     * @param movingColor2: Color of mivng queen
+     * @param movingColor2: Color of moving queen
      * @return
      */
-    public boolean canPlay(int movingColor1, int movingColor2)
+    public boolean canPlay(TileColor movingColor1, TileColor movingColor2)
    {
        int direction = (turn) ? 1 : -1;
        
@@ -1027,9 +991,9 @@ public class Damka extends JFrame {
             for (int j = 1 - i % 2; j < LENGTH; j += 2) {
                 if (tiles[i][j].color == movingColor1)// Check if pawn can move
                 {
-                    if (j > 0 && tiles[i + direction][j-1].color == DamkaTile.TilePawn.BLACK.ordinal())
+                    if (j > 0 && tiles[i + direction][j-1].color == TileColor.BLACK)
                         return true;
-                    if (j < LENGTH - 1 && tiles[i + direction][j+1].color == DamkaTile.TilePawn.BLACK.ordinal())
+                    if (j < LENGTH - 1 && tiles[i + direction][j+1].color == TileColor.BLACK)
                         return true;
                 }
                 else if (tiles[i][j].color == movingColor2)// Check if queen can move
@@ -1040,7 +1004,7 @@ public class Damka extends JFrame {
                        int colIndex = j + QUEEN_DIRS[queen_i][1];
                        if (rowIndex >= 0 && rowIndex <= LENGTH - 1 &&
                            colIndex >= 0 && colIndex <= LENGTH - 1 &&
-                           tiles[rowIndex][colIndex].color == DamkaTile.TilePawn.BLACK.ordinal())
+                           tiles[rowIndex][colIndex].color == TileColor.BLACK)
                            return true;
                    }
                 }
@@ -1051,7 +1015,7 @@ public class Damka extends JFrame {
    }
    
    // Evaluate the position using the In-Place Minimax DFS with Alpha Beta pruning algorithm
-   // in the Computer class.
+   // in the main.Computer class.
    // Update the evaluation panel according to the evaluation
    private void evaluate()
    {

@@ -1,5 +1,5 @@
 # Damka
-Russian checkers with optimized A.I using Java and Swing
+Russian checkers with optimized A.I using Java 12 and the Swing library
 
 
 This is the final version of my HaKfar HaYarok College summary project.
