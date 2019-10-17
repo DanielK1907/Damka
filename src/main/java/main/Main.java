@@ -14,7 +14,9 @@ import static javax.swing.JFrame.EXIT_ON_CLOSE;
  */
 public class Main {
 
-    private static final Color MAGIC = new Color(50, 155, 105);
+    private static final Color JUNGLE_GREEN = new Color(50, 155, 105);
+
+    // recursion depths
     private static final int EASY = 4;
     private static final int MEDIUM = 6;
     private static final int HARD = 8;
@@ -25,22 +27,21 @@ public class Main {
 
 
         // Instantiate the comboboxes and radio buttons
-        JFrame f = new JFrame("Settings");
-        JComboBox lengthBox = new JComboBox();
-        JComboBox pawnRowsBox = new JComboBox();
+        JFrame settingsFrame = new JFrame("Settings");
+        JComboBox boardLengthComboBox = new JComboBox();
+        JComboBox pawnRowsComboBox = new JComboBox();
         ButtonGroup difficulties = new ButtonGroup();
         JRadioButton easy = new JRadioButton("Easy");
         JRadioButton medium = new JRadioButton("Medium");
         JRadioButton hard = new JRadioButton("Hard", true);
-        lengthBox.setBounds(80, 90, 60, 50);
-        pawnRowsBox.setBounds(255, 90, 60, 50);
+        boardLengthComboBox.setBounds(80, 90, 60, 50);
+        pawnRowsComboBox.setBounds(255, 90, 60, 50);
         easy.setBounds(120, 140, 140, 80);
-        easy.setBackground(Color.yellow);
         medium.setBounds(120, 200, 140, 80);
         hard.setBounds(120, 260, 140, 80);
-        easy.setBackground(MAGIC);
-        medium.setBackground(MAGIC);
-        hard.setBackground(MAGIC);
+        easy.setBackground(JUNGLE_GREEN);
+        medium.setBackground(JUNGLE_GREEN);
+        hard.setBackground(JUNGLE_GREEN);
         difficulties.add(easy);
         difficulties.add(medium);
         difficulties.add(hard);
@@ -58,22 +59,10 @@ public class Main {
         {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                Damka d;
-                if (lengthBox.getSelectedItem() != null && pawnRowsBox.getSelectedItem() != null)
-                    d = new Damka((int)lengthBox.getSelectedItem(), (int)pawnRowsBox.getSelectedItem());
-                else // Go for the classic variation
-                    d = new Damka(8, 3);
-                if (easy.isSelected())
-                    Computer.DEPTH_MAX = EASY;
-                else if (medium.isSelected())
-                    Computer.DEPTH_MAX = MEDIUM;
-                else
-                    Computer.DEPTH_MAX = HARD;
-
-                Computer.comp.board = d;
+                Damka d = getDamkaBoard(boardLengthComboBox, pawnRowsComboBox, easy, medium);
                 d.isComputer = false;
                 d.start();
-                f.dispose();
+                settingsFrame.dispose();
             }
 
         });
@@ -84,59 +73,64 @@ public class Main {
         {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                Damka d;
-                if (lengthBox.getSelectedItem() != null & pawnRowsBox.getSelectedItem() != null)
-                    d = new Damka((int)lengthBox.getSelectedItem(), (int)pawnRowsBox.getSelectedItem());
-                else // Go for the classic variation
-                    d = new Damka(8, 3);
-                if (easy.isSelected())
-                    Computer.DEPTH_MAX = EASY;
-                else if (medium.isSelected())
-                    Computer.DEPTH_MAX = MEDIUM;
-                else
-                    Computer.DEPTH_MAX = HARD;
-
-                Computer.comp.board = d;
+                Damka d = getDamkaBoard(boardLengthComboBox, pawnRowsComboBox, easy, medium);
                 d.isComputer = true;
                 d.start();
-                f.dispose();
+                settingsFrame.dispose();
             }
 
         });
 
         for (int i = 4; i <= 12; i++)
-            lengthBox.addItem(i);
-        lengthBox.setSelectedItem(null);
+            boardLengthComboBox.addItem(i);
+        boardLengthComboBox.setSelectedItem(null);
 
 
-        lengthBox.addActionListener(new ActionListener() {
+        boardLengthComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                pawnRowsBox.removeAllItems();
-                for (int i = 1; i < ((int)lengthBox.getSelectedItem()+1)/2; i++)
-                    pawnRowsBox.addItem(i);
-                pawnRowsBox.setSelectedItem(null);
+                pawnRowsComboBox.removeAllItems();
+                for (int i = 1; i < ((int)boardLengthComboBox.getSelectedItem()+1)/2; i++)
+                    pawnRowsComboBox.addItem(i);
+                pawnRowsComboBox.setSelectedItem(null);
             }
         });
 
 
-        f.add(lengthBox);
-        f.add(pawnRowsBox);
-        f.add(easy);
-        f.add(medium);
-        f.add(hard);
-        f.add(lengthLabel);
-        f.add(pawnRowsLabel);
-        f.setSize(400, 360);
-        f.add(humanB);
-        f.add(computerB);
-        f.setLayout(null);
-        f.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        f.setResizable(false);
-        f.setLocationRelativeTo(null); // Passing null centers the form!
-        f.setVisible(true);
-        f.getContentPane().setBackground(MAGIC);
+        settingsFrame.add(boardLengthComboBox);
+        settingsFrame.add(pawnRowsComboBox);
+        settingsFrame.add(easy);
+        settingsFrame.add(medium);
+        settingsFrame.add(hard);
+        settingsFrame.add(lengthLabel);
+        settingsFrame.add(pawnRowsLabel);
+        settingsFrame.setSize(400, 360);
+        settingsFrame.add(humanB);
+        settingsFrame.add(computerB);
+        settingsFrame.setLayout(null);
+        settingsFrame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        settingsFrame.setResizable(false);
+        settingsFrame.setLocationRelativeTo(null); // Passing null centers the form!
+        settingsFrame.setVisible(true);
+        settingsFrame.getContentPane().setBackground(JUNGLE_GREEN);
 //</editor-fold>
 
+    }
+
+    private static Damka getDamkaBoard(JComboBox boardLengthComboBox, JComboBox pawnRowsComboBox, JRadioButton easy, JRadioButton medium) {
+        Damka d;
+        if (boardLengthComboBox.getSelectedItem() != null && pawnRowsComboBox.getSelectedItem() != null)
+            d = new Damka((int)boardLengthComboBox.getSelectedItem(), (int)pawnRowsComboBox.getSelectedItem());
+        else // Go for the classic variation
+            d = new Damka(8, 3);
+        if (easy.isSelected())
+            Computer.DEPTH_MAX = EASY;
+        else if (medium.isSelected())
+            Computer.DEPTH_MAX = MEDIUM;
+        else
+            Computer.DEPTH_MAX = HARD;
+
+        Computer.comp.board = d;
+        return d;
     }
 }

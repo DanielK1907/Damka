@@ -1,36 +1,20 @@
-package main; /**
- *
- * @author Daniel Kanevsky 
- */
+package main;
+
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 
-public class DamkaTile extends JButton implements ActionListener{
-
-    public enum TilePawn
-    {
-        WHITE,
-        BLACK,
-        WHITE_PAWN,
-        BLACK_PAWN,
-        WHITE_PAWN_CHOSEN,
-        BLACK_PAWN_CHOSEN,
-        RED,
-        WHITE_QUEEN,
-        BLACK_QUEEN,
-        WHITE_QUEEN_CHOSEN,
-        BLACK_QUEEN_CHOSEN,
-        DEAD_WHITE,
-        DEAD_BLACK
-    }
-    
-    
+/**
+ * @author Daniel Kanevsky
+ * @
+ * A tile In the Damka Board
+ */
+public class DamkaPawn extends JButton implements ActionListener{
     private static final int TOTAL_ICONS = 13;
     private final Damka board;
     public final int row;
     public final int col;
-    public int color;
+    public TileColor color;
     
     public static Dimension buttonSize= new Dimension(Damka.TILE_SIZE, Damka.TILE_SIZE);
     public static ImageIcon[] Images = new ImageIcon[TOTAL_ICONS];
@@ -41,31 +25,31 @@ public class DamkaTile extends JButton implements ActionListener{
     public  void initialize()
     {
         //<editor-fold defaultstate="collapsed" desc="load content">
-        Images[TilePawn.WHITE.ordinal()] =
+        Images[TileColor.WHITE.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/white.png"));
-        Images[TilePawn.BLACK.ordinal()] =
+        Images[TileColor.BLACK.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/black.png"));
-        Images[TilePawn.WHITE_PAWN.ordinal()] =
+        Images[TileColor.WHITE_PAWN.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/white pawn.png"));
-        Images[TilePawn.BLACK_PAWN.ordinal()] =
+        Images[TileColor.BLACK_PAWN.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/black pawn.png"));
-        Images[TilePawn.WHITE_PAWN_CHOSEN.ordinal()] =
+        Images[TileColor.WHITE_PAWN_CHOSEN.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/white pawn chosen.png"));
-        Images[TilePawn.BLACK_PAWN_CHOSEN.ordinal()] =
+        Images[TileColor.BLACK_PAWN_CHOSEN.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/black pawn chosen.png"));
-        Images[TilePawn.RED.ordinal()] =
+        Images[TileColor.RED.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/red.png"));
-        Images[TilePawn.WHITE_QUEEN.ordinal()] =
+        Images[TileColor.WHITE_QUEEN.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/white queen.png"));
-        Images[TilePawn.BLACK_QUEEN.ordinal()] =
+        Images[TileColor.BLACK_QUEEN.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/black queen.png"));
-        Images[TilePawn.WHITE_QUEEN_CHOSEN.ordinal()] =
+        Images[TileColor.WHITE_QUEEN_CHOSEN.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/white queen chosen.png"));
-        Images[TilePawn.BLACK_QUEEN_CHOSEN.ordinal()] =
+        Images[TileColor.BLACK_QUEEN_CHOSEN.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/black queen chosen.png"));
-        Images[TilePawn.DEAD_WHITE.ordinal()] =
+        Images[TileColor.DEAD_WHITE.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/dead white.png"));
-        Images[TilePawn.DEAD_BLACK.ordinal()] =
+        Images[TileColor.DEAD_BLACK.ordinal()] =
                 new ImageIcon(this.getClass().getResource("/Images/dead black.png"));
 //</editor-fold>
         
@@ -81,8 +65,8 @@ public class DamkaTile extends JButton implements ActionListener{
         
     }
     
-    public DamkaTile(){row = -1; col = -1; board = null;} // Technical only
-    public DamkaTile(int row, int col, Damka board)
+    public DamkaPawn(){row = -1; col = -1; board = null;} // Technical only
+    public DamkaPawn(int row, int col, Damka board)
     {
         setPreferredSize(buttonSize);
         this.board = board;
@@ -95,14 +79,14 @@ public class DamkaTile extends JButton implements ActionListener{
     @Override
     public void actionPerformed(ActionEvent e) 
     {
-        if (color == TilePawn.WHITE.ordinal() ||
-            color == TilePawn.BLACK.ordinal() ||
-            color == TilePawn.DEAD_BLACK.ordinal() ||
-            color == TilePawn.DEAD_WHITE.ordinal())
+        if (color == TileColor.WHITE ||
+            color == TileColor.BLACK ||
+            color == TileColor.DEAD_BLACK ||
+            color == TileColor.DEAD_WHITE)
             return;
         
-        if (color == TilePawn.WHITE_PAWN.ordinal() ||
-            color == TilePawn.BLACK_PAWN.ordinal())
+        if (color == TileColor.WHITE_PAWN ||
+            color == TileColor.BLACK_PAWN)
         {
             if (board.isOnStreak)
                 return;
@@ -114,8 +98,8 @@ public class DamkaTile extends JButton implements ActionListener{
             return;
         }
          
-        if (color == TilePawn.WHITE_PAWN_CHOSEN.ordinal() ||
-            color == TilePawn.BLACK_PAWN_CHOSEN.ordinal())
+        if (color == TileColor.WHITE_PAWN_CHOSEN ||
+            color == TileColor.BLACK_PAWN_CHOSEN)
         {
             if (board.isOnStreak)
                 return;
@@ -123,8 +107,8 @@ public class DamkaTile extends JButton implements ActionListener{
             return;
         }
         
-        if (color == TilePawn.WHITE_QUEEN_CHOSEN.ordinal() ||
-            color == TilePawn.BLACK_QUEEN_CHOSEN.ordinal())
+        if (color == TileColor.WHITE_QUEEN_CHOSEN ||
+            color == TileColor.BLACK_QUEEN_CHOSEN)
         {
             if (board.isOnStreak)
                 return;
@@ -132,13 +116,13 @@ public class DamkaTile extends JButton implements ActionListener{
             return;
         }
         
-        if (color == TilePawn.RED.ordinal())
+        if (color == TileColor.RED)
         {
             if (!board.isForced)
             {
-                int tileColor = board.tiles[board.chosenPawnRow][board.chosenPawnCol].color;
-                if (tileColor == TilePawn.WHITE_QUEEN_CHOSEN.ordinal() ||
-                    tileColor == TilePawn.BLACK_QUEEN_CHOSEN.ordinal())
+                TileColor tileColor = board.tiles[board.chosenPawnRow][board.chosenPawnCol].color;
+                if (tileColor == TileColor.WHITE_QUEEN_CHOSEN ||
+                    tileColor == TileColor.BLACK_QUEEN_CHOSEN)
                 {
                     board.moveQueen(this);
                     return;
@@ -163,9 +147,9 @@ public class DamkaTile extends JButton implements ActionListener{
     }
     
     
-    public void setColor(int color)
+    public void setColor(TileColor color)
     {
         this.color = color;
-        setIcon(Images[color]);
+        setIcon(Images[color.ordinal()]);
     }
 }

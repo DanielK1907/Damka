@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.Stack;
 
 /**
- * AI for playing Shashki
+ * AI for playing Shashki (Russian Checkers)
  * @author Daniel Kanevsky
  */
 class Computer {
@@ -20,7 +20,7 @@ class Computer {
         int toCol; // Col index of destination tile
         int movesWithoutProgress; // Moves without progress before this move was played
         boolean isCapture; // Is this move a capture?
-        int capturedColor; // Color of captured piece
+        TileColor capturedColor; // Color of captured piece
         int capturedRow; // Row of captured piece
         int capturedCol; // Col of captured piece
         boolean wasOnStreak; // Was this move made as the part of streak
@@ -60,7 +60,7 @@ class Computer {
     private ArrayList<Move> generateMoves ()
     {
         ArrayList<Move> moves = new ArrayList<>();
-        int playing1, playing2;
+        TileColor playing1, playing2;
         boolean isCapture = board.isForced;
         
         // If the board is on streak, generate the moves with the pawn/queen on streak.
@@ -70,7 +70,7 @@ class Computer {
             {
                 for (int j = 1 - i%2; j < board.LENGTH; j+= 2)
                 {
-                    if (board.tiles[i][j].color == DamkaTile.TilePawn.RED.ordinal())
+                    if (board.tiles[i][j].color == TileColor.RED)
                     {
                         moves.add(new Move(board.chosenPawnRow, board.chosenPawnCol, i, j, 0, true, true, board.turn));
                     }
@@ -82,13 +82,13 @@ class Computer {
         
         if (board.turn)
         {
-            playing1 = DamkaTile.TilePawn.BLACK_PAWN.ordinal();
-            playing2 = DamkaTile.TilePawn.BLACK_QUEEN.ordinal();
+            playing1 = TileColor.BLACK_PAWN;
+            playing2 = TileColor.BLACK_QUEEN;
         }
         else
         {
-            playing1 = DamkaTile.TilePawn.WHITE_PAWN.ordinal();
-            playing2 = DamkaTile.TilePawn.WHITE_QUEEN.ordinal();
+            playing1 = TileColor.WHITE_PAWN;
+            playing2 = TileColor.WHITE_QUEEN;
         }
         
         
@@ -105,26 +105,26 @@ class Computer {
                     if (board.tiles[i][j].color == playing1)
                     {
                         if (board.turn)
-                            board.tiles[i][j].setColor(DamkaTile.TilePawn.BLACK_PAWN_CHOSEN.ordinal());
+                            board.tiles[i][j].setColor(TileColor.BLACK_PAWN_CHOSEN);
                         else
-                            board.tiles[i][j].setColor(DamkaTile.TilePawn.WHITE_PAWN_CHOSEN.ordinal());
+                            board.tiles[i][j].setColor(TileColor.WHITE_PAWN_CHOSEN);
                         board.turnRedPawnSquaresOn();
                         if (board.turn)
-                            board.tiles[i][j].setColor(DamkaTile.TilePawn.BLACK_PAWN.ordinal());
+                            board.tiles[i][j].setColor(TileColor.BLACK_PAWN);
                         else
-                            board.tiles[i][j].setColor(DamkaTile.TilePawn.WHITE_PAWN.ordinal());
+                            board.tiles[i][j].setColor(TileColor.WHITE_PAWN);
                     }
                     else
                     {
                         if (board.turn)
-                            board.tiles[i][j].setColor(DamkaTile.TilePawn.BLACK_QUEEN_CHOSEN.ordinal());
+                            board.tiles[i][j].setColor(TileColor.BLACK_QUEEN_CHOSEN);
                         else
-                            board.tiles[i][j].setColor(DamkaTile.TilePawn.WHITE_QUEEN_CHOSEN.ordinal());
+                            board.tiles[i][j].setColor(TileColor.WHITE_QUEEN_CHOSEN);
                         board.turnRedQueenSquaresOn();
                         if (board.turn)
-                            board.tiles[i][j].setColor(DamkaTile.TilePawn.BLACK_QUEEN.ordinal());
+                            board.tiles[i][j].setColor(TileColor.BLACK_QUEEN);
                         else
-                            board.tiles[i][j].setColor(DamkaTile.TilePawn.WHITE_QUEEN.ordinal());
+                            board.tiles[i][j].setColor(TileColor.WHITE_QUEEN);
                     }
                         
                     // Add the moves for the current tile
@@ -132,9 +132,9 @@ class Computer {
                     {
                         for (int l = 1 - k%2; l < board.LENGTH; l += 2)
                         {
-                            if (board.tiles[k][l].color == DamkaTile.TilePawn.RED.ordinal())
+                            if (board.tiles[k][l].color == TileColor.RED)
                             {
-                                board.tiles[k][l].setColor(DamkaTile.TilePawn.BLACK.ordinal());
+                                board.tiles[k][l].setColor(TileColor.BLACK);
                                 moves.add(new Move(i, j, k, l, board.movesWithoutProgress, isCapture, false, board.turn));
                             }
                         }
@@ -194,7 +194,7 @@ class Computer {
      */
     public float miniMaxAlphaBeta(int currentDepth, boolean Max, float alpha, float beta)
     {
-        if (board.movesWithoutProgress == board.MOVES_FOR_DRAW)
+        if (board.movesWithoutProgress == Damka.MOVES_FOR_DRAW)
             return 0;
         if (currentDepth == DEPTH_MAX)
             return evaluatePosition();
@@ -240,68 +240,28 @@ class Computer {
         
         return positionValue;
     }
-    
-    // Search for the best move via minimax without Alpha-Beta pruning
-    private float miniMaxBestMove(int currentDepth, int sign)
-    {
-        if (board.movesWithoutProgress == Damka.MOVES_FOR_DRAW)
-            return 0;
-        if (currentDepth == DEPTH_MAX)
-            return evaluatePosition();
-        
-        ArrayList<Move> possibilities = generateMoves();
-        float positionValue = MIN_POS_VAL;
-        float moveValue;
-        boolean bestMoveFound = false;
-        
-        for (Move possibility : possibilities)
-        {
-            movesStack.push(possibility);
-            makeMove(possibility);
-            if (board.isOnStreak) 
-                moveValue = miniMaxBestMove(currentDepth + 1, sign)*sign;
-            else
-                moveValue = miniMaxBestMove(currentDepth + 1, -sign)*sign;
-            
-            if (moveValue > positionValue)
-            {
-                positionValue = moveValue;
-                if (currentDepth == 0)
-                    moveToPlay = possibility;
-                if (positionValue == MAX_POS_VAL)
-                    bestMoveFound = true;
-                
-            }
-                
-            undoMove(movesStack.pop());
-            if (bestMoveFound)
-                break;
-        }
-        
-        return positionValue*sign;
-    }
 
     private void makeMove(Move move)
     {
         board.chosenPawnRow = move.fromRow;
         board.chosenPawnCol = move.fromCol;
-        DamkaTile originTile = board.tiles[move.fromRow][move.fromCol];
-        DamkaTile destinationTile = board.tiles[move.toRow][move.toCol];
+        DamkaPawn originTile = board.tiles[move.fromRow][move.fromCol];
+        DamkaPawn destinationTile = board.tiles[move.toRow][move.toCol];
         
         // set the pawn/queen as chosen if isn't already
-        if (originTile.color == DamkaTile.TilePawn.WHITE_PAWN.ordinal())
-            originTile.setColor(DamkaTile.TilePawn.WHITE_PAWN_CHOSEN.ordinal());
-        else if (originTile.color == DamkaTile.TilePawn.BLACK_PAWN.ordinal())
-            originTile.setColor(DamkaTile.TilePawn.BLACK_PAWN_CHOSEN.ordinal());
-        else if (originTile.color == DamkaTile.TilePawn.WHITE_QUEEN.ordinal())
-            originTile.setColor(DamkaTile.TilePawn.WHITE_QUEEN_CHOSEN.ordinal());
-        else if (originTile.color == DamkaTile.TilePawn.BLACK_QUEEN.ordinal())
-            originTile.setColor(DamkaTile.TilePawn.BLACK_QUEEN_CHOSEN.ordinal());
+        if (originTile.color == TileColor.WHITE_PAWN)
+            originTile.setColor(TileColor.WHITE_PAWN_CHOSEN);
+        else if (originTile.color == TileColor.BLACK_PAWN)
+            originTile.setColor(TileColor.BLACK_PAWN_CHOSEN);
+        else if (originTile.color == TileColor.WHITE_QUEEN)
+            originTile.setColor(TileColor.WHITE_QUEEN_CHOSEN);
+        else if (originTile.color == TileColor.BLACK_QUEEN)
+            originTile.setColor(TileColor.BLACK_QUEEN_CHOSEN);
         
         if (!move.isCapture)
         {
-            if (originTile.color == DamkaTile.TilePawn.WHITE_PAWN_CHOSEN.ordinal() ||
-                    originTile.color == DamkaTile.TilePawn.BLACK_PAWN_CHOSEN.ordinal())
+            if (originTile.color == TileColor.WHITE_PAWN_CHOSEN ||
+                    originTile.color == TileColor.BLACK_PAWN_CHOSEN)
                 board.movePawn(destinationTile);
             else
                 board.moveQueen(destinationTile);
@@ -315,15 +275,15 @@ class Computer {
     private void undoMove(Move move)
     {
         board.movesWithoutProgress = move.movesWithoutProgress;
-        int deadTileColor;
+        TileColor deadTileColor;
         board.turnRedSquaresOff();
         if (!board.isOnStreak && move.wasOnStreak)
         {
             
             if (move.turn)
-                deadTileColor = DamkaTile.TilePawn.DEAD_WHITE.ordinal();
+                deadTileColor = TileColor.DEAD_WHITE;
             else
-                deadTileColor = DamkaTile.TilePawn.DEAD_BLACK.ordinal();
+                deadTileColor = TileColor.DEAD_BLACK;
             
             Stack<Move> temp = new Stack<>();
             while(!movesStack.isEmpty() && movesStack.peek().isCapture && movesStack.peek().turn)
@@ -336,14 +296,14 @@ class Computer {
             while (!temp.isEmpty())
                 movesStack.push(temp.pop());
         }
-        DamkaTile originTile = board.tiles[move.fromRow][move.fromCol];
-        DamkaTile destinationTile = board.tiles[move.toRow][move.toCol];
-        int destColor = destinationTile.color;
+        DamkaPawn originTile = board.tiles[move.fromRow][move.fromCol];
+        DamkaPawn destinationTile = board.tiles[move.toRow][move.toCol];
+        int destColor = destinationTile.color.ordinal();
         
         if (!board.isOnStreak && move.wasOnStreak)
-            destinationTile.setColor(DamkaTile.TilePawn.RED.ordinal());
+            destinationTile.setColor(TileColor.RED);
         else
-            destinationTile.setColor(DamkaTile.TilePawn.BLACK.ordinal());
+            destinationTile.setColor(TileColor.BLACK);
         
         
         board.isOnStreak = move.wasOnStreak;
@@ -351,31 +311,31 @@ class Computer {
         board.turn = move.turn;
         
         if (!move.wasOnStreak &&
-            (destColor == DamkaTile.TilePawn.WHITE_PAWN_CHOSEN.ordinal() ||
-            destColor == DamkaTile.TilePawn.BLACK_PAWN_CHOSEN.ordinal() ||
-            destColor == DamkaTile.TilePawn.WHITE_QUEEN_CHOSEN.ordinal() ||
-            destColor == DamkaTile.TilePawn.BLACK_QUEEN_CHOSEN.ordinal()))
+            (destColor == TileColor.WHITE_PAWN_CHOSEN.ordinal() ||
+            destColor == TileColor.BLACK_PAWN_CHOSEN.ordinal() ||
+            destColor == TileColor.WHITE_QUEEN_CHOSEN.ordinal() ||
+            destColor == TileColor.BLACK_QUEEN_CHOSEN.ordinal()))
             destColor -= 2;
         if (move.wasOnStreak &&
-            (destColor == DamkaTile.TilePawn.WHITE_PAWN.ordinal() ||
-            destColor == DamkaTile.TilePawn.BLACK_PAWN.ordinal() ||
-            destColor == DamkaTile.TilePawn.WHITE_QUEEN.ordinal() ||
-            destColor == DamkaTile.TilePawn.BLACK_QUEEN.ordinal()))
+            (destColor == TileColor.WHITE_PAWN.ordinal() ||
+            destColor == TileColor.BLACK_PAWN.ordinal() ||
+            destColor == TileColor.WHITE_QUEEN.ordinal() ||
+            destColor == TileColor.BLACK_QUEEN.ordinal()))
             destColor += 2;
-        originTile.setColor(destColor);
+        originTile.setColor(TileColor.values()[destColor]);
         
         if (move.wasPremotion)
         {
-            if (originTile.color == DamkaTile.TilePawn.WHITE_QUEEN.ordinal() ||
-                originTile.color == DamkaTile.TilePawn.WHITE_QUEEN_CHOSEN.ordinal())
+            if (originTile.color == TileColor.WHITE_QUEEN ||
+                originTile.color == TileColor.WHITE_QUEEN_CHOSEN)
             {
                 board.whiteQueens--;
-                originTile.setColor(DamkaTile.TilePawn.WHITE_PAWN.ordinal());
+                originTile.setColor(TileColor.WHITE_PAWN);
             }
             else
             {
                 board.blackQueens--;
-                originTile.setColor(DamkaTile.TilePawn.BLACK_PAWN.ordinal());
+                originTile.setColor(TileColor.BLACK_PAWN);
             }
         }
     
@@ -385,14 +345,14 @@ class Computer {
             if (move.turn)
             {
                 board.whitePawnsLeft++;
-                if (move.capturedColor == DamkaTile.TilePawn.WHITE_QUEEN.ordinal())
+                if (move.capturedColor == TileColor.WHITE_QUEEN)
                     board.whiteQueens++;
             }
                 
             else
             {
                 board.blackPawnsLeft++;
-                if (move.capturedColor == DamkaTile.TilePawn.BLACK_QUEEN.ordinal())
+                if (move.capturedColor == TileColor.BLACK_QUEEN)
                     board.blackQueens++;
             }
         }
@@ -404,8 +364,8 @@ class Computer {
             board.chosenPawnRow = move.fromRow;
             board.chosenPawnCol = move.fromCol;
             
-            if (originTile.color == DamkaTile.TilePawn.BLACK_PAWN.ordinal() ||
-                originTile.color == DamkaTile.TilePawn.WHITE_PAWN.ordinal())
+            if (originTile.color == TileColor.BLACK_PAWN ||
+                originTile.color == TileColor.WHITE_PAWN)
                 board.turnRedPawnSquaresOn();
             else
                 board.turnRedQueenSquaresOn();
@@ -447,8 +407,8 @@ class Computer {
             else
             {
                 if (board.whitePawnsLeft <= Damka.MAX_PAWNS_IN_STALEMATE &&
-                !board.canPlay(DamkaTile.TilePawn.BLACK_PAWN.ordinal(),
-                         DamkaTile.TilePawn.BLACK_QUEEN.ordinal()))
+                !board.canPlay(TileColor.BLACK_PAWN,
+                         TileColor.BLACK_QUEEN))
                     return MIN_POS_VAL;
             }
         }
@@ -462,8 +422,8 @@ class Computer {
             else
             {
                 if (board.whitePawnsLeft <= Damka.MAX_PAWNS_IN_STALEMATE &&
-                !board.canPlay(DamkaTile.TilePawn.WHITE_PAWN.ordinal(),
-                         DamkaTile.TilePawn.WHITE_QUEEN.ordinal()))
+                !board.canPlay(TileColor.WHITE_PAWN,
+                         TileColor.WHITE_QUEEN))
                     return MAX_POS_VAL;
             }
         }
@@ -471,7 +431,7 @@ class Computer {
         // check for black pawns in white territory
         for (int i = board.LENGTH - 3; i < board.LENGTH - 1; i++) {
             for (int j = 1 - i % 2; j < board.LENGTH; j += 2) {
-                if (board.tiles[i][j].color == DamkaTile.TilePawn.BLACK_PAWN.ordinal())
+                if (board.tiles[i][j].color == TileColor.BLACK_PAWN)
                 {
                     // bad in start of the game
                     if (isStartGame)
@@ -486,7 +446,7 @@ class Computer {
         // check for white pawns in black territory
         for (int i = 1; i < 3; i++) {
             for (int j = 1 - (i % 2); j < board.LENGTH; j += 2) {
-                if (board.tiles[i][j].color == DamkaTile.TilePawn.WHITE_PAWN.ordinal())
+                if (board.tiles[i][j].color == TileColor.WHITE_PAWN)
                 {
                     // bad in start of the game (for white)
                     if (isStartGame)
@@ -502,11 +462,11 @@ class Computer {
         if (isStartGame)
         {
             for (int i = 1; i < board.LENGTH; i+= 2)
-                if (board.tiles[0][i].color == DamkaTile.TilePawn.BLACK_PAWN.ordinal())
+                if (board.tiles[0][i].color == TileColor.BLACK_PAWN)
                     posVal += 0.2;
             
             for (int i = board.LENGTH % 2; i < board.LENGTH; i+= 2)
-                if (board.tiles[board.LENGTH - 1][i].color == DamkaTile.TilePawn.WHITE_PAWN.ordinal())
+                if (board.tiles[board.LENGTH - 1][i].color == TileColor.WHITE_PAWN)
                     posVal -= 0.2;
         }
         
