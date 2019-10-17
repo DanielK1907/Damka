@@ -1,7 +1,6 @@
 package main;
 
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Stack;
 
 /**
@@ -26,7 +25,6 @@ class Computer {
         boolean wasOnStreak; // Was this move made as the part of streak
         boolean wasPremotion; // Was this a premotion to a queen
         boolean turn; // Whose turn is it? false - white, true - black
-        ArrayList<Integer> deadTiles; // Dead tiles on board before making this move
         
         Move(int fromRow, int fromCol, int toRow, int toCol, int movesWithoutProgress,
                 boolean isCapture, boolean wasOnStreak, boolean turn)
@@ -52,7 +50,6 @@ class Computer {
 
     Damka board;
     private Move moveToPlay; // The move which will be played
-    private static Random rand = new Random();
     
     Stack<Move> movesStack = new Stack<>();
     
@@ -192,7 +189,7 @@ class Computer {
      * @param beta : beta value - > best position value guaranteed for Min in the current node
      * @return : position Value
      */
-    public float miniMaxAlphaBeta(int currentDepth, boolean Max, float alpha, float beta)
+    float miniMaxAlphaBeta(int currentDepth, boolean Max, float alpha, float beta)
     {
         if (board.movesWithoutProgress == Damka.MOVES_FOR_DRAW)
             return 0;
@@ -477,7 +474,7 @@ class Computer {
      * Find the best move in the position for the computer (black)
      * And make it
      */
-    public void play()
+    void play()
     {
         moveToPlay = null;
         board.isComputerPlaying = true;

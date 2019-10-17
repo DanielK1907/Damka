@@ -34,7 +34,7 @@ public class Damka extends JFrame {
     static final int MAX_PAWNS_IN_STALEMATE = 5;
 
     /**
-     * Direction vector for possile direction the queen can move
+     * Direction vector for possible direction the queen can move
      */
     private static final int[][] QUEEN_DIRS = {
         {1, 1},
@@ -93,7 +93,7 @@ public class Damka extends JFrame {
     
     /**
      * Create a new Damka object (Board game as a frame)
-     * Initalize the frame with panels a JComponents
+     * Initialize the frame with panels a JComponents
      * @param length: Length of the board (width and height
      * @param pawnRows: Number of pawn rows each side has to begin with
      */
@@ -141,9 +141,9 @@ public class Damka extends JFrame {
     }
 
     /**
-     * Initialize the game panel with pawns in the corrent colors
+     * Initialize the game panel with pawns in the correct colors
      */
-    public void start()
+    void start()
     {
         //<editor-fold defaultstate="collapsed" desc="create tiles and add them to the game panel">
         for (int i = 0; i < LENGTH; i++) {
@@ -203,7 +203,7 @@ public class Damka extends JFrame {
      * Turn the chosen pawn off, as well as all the red squares.
      * If the pawn is A queen, call turnQueenOff()
      */
-    public void turnPawnOff() {
+    void turnPawnOff() {
         if (tiles[chosenPawnRow][chosenPawnCol].color == TileColor.BLACK_QUEEN_CHOSEN ||
             tiles[chosenPawnRow][chosenPawnCol].color == TileColor.WHITE_QUEEN_CHOSEN)
         {
@@ -960,13 +960,9 @@ public class Damka extends JFrame {
        gameOverL.setBounds(60, 95, 100, 20);
        gameOverB.setBounds(35, 20, 120, 40);
        
-       gameOverB.addActionListener(new ActionListener()
-       {
-           @Override
-           public void actionPerformed(ActionEvent ae) {
-               gameOverF.dispose();
-               dispose();
-           }
+       gameOverB.addActionListener(ae -> {
+           gameOverF.dispose();
+           dispose();
        });
        
        gameOverF.add(gameOverL);
@@ -984,7 +980,7 @@ public class Damka extends JFrame {
     /**
      * Checks if a move is possible in the current position
      * @param movingColor1: Color of moving pawn
-     * @param movingColor2: Color of mivng queen
+     * @param movingColor2: Color of moving queen
      * @return
      */
     public boolean canPlay(TileColor movingColor1, TileColor movingColor2)

@@ -22,7 +22,7 @@ public class DamkaPawn extends JButton implements ActionListener{
     /**
      * Initialize the images array with images.
      */
-    public  void initialize()
+    public void initialize()
     {
         //<editor-fold defaultstate="collapsed" desc="load content">
         Images[TileColor.WHITE.ordinal()] =

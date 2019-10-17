@@ -55,16 +55,11 @@ public class Main {
         // instantiate the buttons
         JButton humanB = new JButton("Human Vs. Human");
         humanB.setBounds(50, 10, 300, 20);
-        humanB.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                Damka d = getDamkaBoard(boardLengthComboBox, pawnRowsComboBox, easy, medium);
-                d.isComputer = false;
-                d.start();
-                settingsFrame.dispose();
-            }
-
+        humanB.addActionListener(ae -> {
+            Damka d = getDamkaBoard(boardLengthComboBox, pawnRowsComboBox, easy, medium);
+            d.isComputer = false;
+            d.start();
+            settingsFrame.dispose();
         });
 
         JButton computerB = new JButton("Human Vs. Computer");
